@@ -1,0 +1,19 @@
+{
+  "name": "pollingbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaIIadium/polling-bot.git"
+  },
+  "author": "PaIIadium",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PaIIadium/polling-bot/issues"
+  },
+  "homepage": "https://github.com/PaIIadium/polling-bot#readme"
+}
