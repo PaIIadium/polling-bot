@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/PaIIadium/polling-bot/issues"
   },
-  "homepage": "https://github.com/PaIIadium/polling-bot#readme"
+  "homepage": "https://github.com/PaIIadium/polling-bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.40.0"
+  }
 }
