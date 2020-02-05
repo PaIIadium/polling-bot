@@ -4,6 +4,7 @@ process.env['NTBA_FIX_319'] = 1;
 
 const Bot = require('node-telegram-bot-api');
 const fs = require('fs');
+const select = require('./teachers');
 const token = process.env.TOKEN;
 const bot = new Bot(token, { 
   polling: {
@@ -62,6 +63,21 @@ const onDownload = msg => {
   fs.writeFile('./data.csv', string, () => bot.sendMessage(msg.chat.id, string));
 };
 
+const formatTeachers = map => {
+  let str = '';
+  const set = new Set();
+  for (const [, teachers] of map) {
+    teachers.forEach(val => set.add(val));
+  }
+  set.forEach(val => str += val + '\n');
+  return str;
+};
+
+const onTeachers = msg => {
+  const str = formatTeachers(select());
+  bot.sendMessage(msg.chat.id, str);
+};
+
 const handler = msg => {
   switch (msg.text) {
   case '/start': {
@@ -74,6 +90,10 @@ const handler = msg => {
   }
   case '/_download': {
     onDownload(msg);
+    break;
+  }
+  case '/_teachers': {
+    onTeachers(msg);
     break;
   }
   default: onGroup(msg);
