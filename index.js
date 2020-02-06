@@ -4,7 +4,7 @@ process.env['NTBA_FIX_319'] = 1;
 
 const Bot = require('node-telegram-bot-api');
 const fs = require('fs');
-const select = require('./teachers');
+const { select, teachers } = require('./teachers');
 const token = process.env.TOKEN;
 const bot = new Bot(token, { 
   polling: {
@@ -41,10 +41,15 @@ const onStart = msg => {
 };
 
 const onGroup = msg => {
-  const regexp = /^[а-щА-ЩЬьЮюЯяЇїІіЄєҐґ]{2}-[0-9]{2} \([а-щА-ЩЬьЮюЯяЇїІіЄєҐґ]+\)$/;
-  if (regexp.test(msg.text)) {
-    base.set(msg.chat.id, { tag: msg.from.username, group: msg.text.toUpperCase() });
-    bot.sendMessage(msg.chat.id, ansSuccessful);
+  //const regexp = /^[а-щА-ЩЬьЮюЯяЇїІіЄєҐґ]{2}-([0-9]|[а-щА-ЩЬьЮюЯяЇїІіЄєҐґ-])+ \([а-щА-ЩЬьЮюЯяЇїІіЄєҐґ]+\)$/;
+  const group = msg.text.toLowerCase();
+  const [groupName, ] = group.split(' ');
+  if (teachers.has(group)) {
+    base.set(msg.chat.id, { tag: msg.from.username, group: group.toUpperCase() });
+    saveFile(() => bot.sendMessage(msg.chat.id, ansSuccessful));
+  } else if (teachers.has(groupName)) {
+    base.set(msg.chat.id, { tag: msg.from.username, group: groupName.toUpperCase() });
+    saveFile(() => bot.sendMessage(msg.chat.id, ansSuccessful));
   } else {
     bot.sendMessage(msg.chat.id, ansError);
   }
@@ -52,15 +57,20 @@ const onGroup = msg => {
 
 const onDelete = msg => {
   base.delete(msg.chat.id);
-  bot.sendMessage(msg.chat.id, ansDelete);
+  saveFile(() => bot.sendMessage(msg.chat.id, ansDelete));
 };
 
-const onDownload = msg => {
+const saveFile = fn => {
   let string = '';
   for (const [id, obj] of base) {
     string += id + ',' + obj.tag + ',' + obj.group + '\n';
   }
-  fs.writeFile('./data.csv', string, () => bot.sendMessage(msg.chat.id, string));
+  fs.writeFile('./data.csv', string, fn);//
+  return string;
+};
+
+const onDownload = msg => {
+  bot.sendMessage(msg.chat.id, saveFile(() => {}));
 };
 
 const formatTeachers = map => {
@@ -73,8 +83,22 @@ const formatTeachers = map => {
   return str;
 };
 
+const formatGroupTeachers = map => {
+  let str = '';
+  for (const [group, teachers] of map) {
+    str += group.toUpperCase() + ':\n';
+    teachers.forEach(val => str += val + '\n');
+  }
+  return str;
+};
+
 const onTeachers = msg => {
   const str = formatTeachers(select());
+  bot.sendMessage(msg.chat.id, str);
+};
+
+const onGroupTeachers = msg => {
+  const str = formatGroupTeachers(select());
   bot.sendMessage(msg.chat.id, str);
 };
 
@@ -94,6 +118,10 @@ const handler = msg => {
   }
   case '/_teachers': {
     onTeachers(msg);
+    break;
+  }
+  case '/_groupteachers': {
+    onGroupTeachers(msg);
     break;
   }
   default: onGroup(msg);
